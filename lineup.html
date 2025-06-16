@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Lineup for match') }} — {{ match.team1.name }} vs {{ match.team2.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto bg-white p-6 rounded-2xl shadow-md space-y-6">
+  <div class="text-center">
+    <h1 class="text-2xl font-bold">📋 {{ _('Match Lineup') }}</h1>
+    <h2 class="text-lg text-gray-600">{{ match.team1.name }} vs {{ match.team2.name }}</h2>
+  </div>
+
+  <form method="post" class="space-y-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Team 1 -->
+      <div class="bg-gray-50 p-4 rounded-xl border">
+        <h3 class="text-xl font-semibold mb-3">👕 {{ match.team1.name }}</h3>
+        <ul class="space-y-2">
+          {% for player in players_team1 %}
+          <li class="flex items-center space-x-2">
+            <input type="checkbox" name="players" value="{{ player.id }}"
+              {% if player.id in selected_ids_team1 %}checked{% endif %}
+              class="accent-purple-600 w-4 h-4">
+            <label class="text-sm">#{{ player.number }} — {{ player.name }}</label>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <!-- Team 2 -->
+      <div class="bg-gray-50 p-4 rounded-xl border">
+        <h3 class="text-xl font-semibold mb-3">👕 {{ match.team2.name }}</h3>
+        <ul class="space-y-2">
+          {% for player in players_team2 %}
+          <li class="flex items-center space-x-2">
+            <input type="checkbox" name="players" value="{{ player.id }}"
+              {% if player.id in selected_ids_team2 %}checked{% endif %}
+              class="accent-purple-600 w-4 h-4">
+            <label class="text-sm">#{{ player.number }} — {{ player.name }}</label>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <div class="flex justify-between items-center">
+      <a href="{{ url_for('match_protocol', match_id=match.id) }}"
+         class="text-purple-600 hover:underline text-sm">← {{ _('Back to match protocol') }}</a>
+      <button type="submit"
+              class="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg transition">
+        💾 {{ _('Save lineup') }}
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+

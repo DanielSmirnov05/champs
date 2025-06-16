@@ -1,0 +1,388 @@
+{% extends "base.html" %}
+{% block title %}{{ tournament.name }} — {{ _('Tournament') }}{% endblock %}
+
+{% block content %}
+<div class="mt-6 px-4 animate-fade-in">
+
+  <h1 class="text-3xl font-extrabold mb-6 flex items-center gap-3 text-gray-900">
+    🏆 <span>{{ tournament.name }}</span>
+  </h1>
+
+  <div class="flex flex-wrap gap-3 mb-6">
+    <a href="#info" data-tab="info"
+       class="tab-link inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 text-sm font-medium text-gray-700 hover:bg-gray-200 transition">
+      🏁 {{ _('Info') }}
+    </a>
+    <a href="#teams" data-tab="teams"
+       class="tab-link inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 text-sm font-medium text-gray-700 hover:bg-gray-200 transition">
+      👥 {{ _('Teams') }}
+    </a>
+    <a href="#standings" data-tab="standings"
+       class="tab-link inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 text-sm font-medium text-gray-700 hover:bg-gray-200 transition">
+      📊 {{ _('Standings') }}
+    </a>
+    <a href="#calendar" data-tab="calendar"
+       class="tab-link inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 text-sm font-medium text-gray-700 hover:bg-gray-200 transition">
+      📅 {{ _('Calendar') }}
+    </a>
+    <a href="#stats" data-tab="stats"
+       class="tab-link inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 text-sm font-medium text-gray-700 hover:bg-gray-200 transition">
+      ⚽ {{ _('Stats') }}
+    </a>
+  </div>
+
+
+  <section id="info" class="tab-section">
+    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-md max-w-3xl hover:shadow-lg transition-all duration-300">
+      <h2 class="text-2xl font-semibold mb-6 flex items-center gap-2 text-gray-900">
+        🏁 {{ _('Tournament Info') }}
+      </h2>
+
+      <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5 text-sm text-gray-700">
+
+        <div>
+          <dt class="font-medium text-gray-500">🏆 {{ _('Tournament name') }}:</dt>
+          <dd class="text-base text-gray-900 font-semibold">{{ tournament.name }}</dd>
+        </div>
+
+        <div>
+          <dt class="font-medium text-gray-500">📅 {{ _('Start date') }}:</dt>
+          <dd class="text-base text-gray-900">{{ tournament.start_date or _('not specified') }}</dd>
+        </div>
+
+        <div>
+          <dt class="font-medium text-gray-500">📍 {{ _('Location') }}:</dt>
+          <dd class="text-base text-gray-900">{{ tournament.location or _('not specified') }}</dd>
+        </div>
+
+        <div>
+          <dt class="font-medium text-gray-500">🎯 {{ _('Format') }}:</dt>
+          <dd class="text-base text-indigo-700 font-medium">{{ tournament.format or _('not specified') }}</dd>
+        </div>
+
+        <div>
+          <dt class="font-medium text-gray-500">👤 {{ _('Creator') }}:</dt>
+          <dd class="text-base">
+            {% if tournament.creator %}
+              <a href="{{ url_for('user_profile', user_id=tournament.creator.id) }}"
+                 class="text-indigo-600 hover:underline font-medium">
+                @{{ tournament.creator.name }}
+              </a>
+            {% else %}
+              <span class="text-gray-400">{{ _('Unknown') }}</span>
+            {% endif %}
+          </dd>
+        </div>
+
+        <div>
+          <dt class="font-medium text-gray-500">👥 {{ _('Number of teams') }}:</dt>
+          <dd class="text-base text-gray-900">{{ teams|length }}</dd>
+        </div>
+
+        <div class="sm:col-span-2">
+          <dt class="font-medium text-gray-500 mb-1">📝 {{ _('Description') }}:</dt>
+          <dd>
+            <div class="bg-gray-50 p-4 rounded-md border text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+              {{ tournament.description or _('No description provided.') }}
+            </div>
+          </dd>
+        </div>
+      </dl>
+
+      {% if current_user.is_authenticated and (current_user.role in ['admin', 'king'] or (current_user.role == 'organizer' and tournament.creator_id == current_user.id)) %}
+
+      <div class="text-right mt-6">
+        <a href="{{ url_for('edit_tournament', tournament_id=tournament.id) }}"
+          class="inline-flex items-center gap-2 bg-purple-600 text-white text-sm font-medium py-2 px-4 rounded-lg shadow hover:bg-purple-700 transition"
+          title="{{ _('Edit tournament info') }}">
+          ✏️ {{ _('Edit tournament') }}
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  </section>
+
+<!-- Teams -->
+<section id="teams" class="tab-section hidden mt-8">
+  <h2 class="text-xl font-semibold mb-4 flex items-center gap-2 text-gray-800">
+    👥 {{ _('Teams') }}
+  </h2>
+
+  {% set can_edit = current_user.is_authenticated and (current_user.role in ['admin', 'king'] or (current_user.role == 'organizer' and tournament.creator_id == current_user.id)) %}
+
+
+  {% if can_edit %}
+  <form method="POST" action="{{ url_for('add_team_to_tournament', tournament_id=tournament.id) }}"
+        class="flex flex-col sm:flex-row gap-3 items-start sm:items-end mb-6">
+    <input type="text" name="team_name" placeholder="{{ _('Team name') }}" required
+          class="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          maxlength="100">
+    <button type="submit"
+            class="flex items-center gap-2 bg-purple-600 text-white px-5 py-2 rounded-md font-medium hover:bg-purple-700 transition"
+            title="{{ _('Add team') }}">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"
+          viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+      </svg>
+      {{ _('Add') }}
+    </button>
+  </form>
+  {% endif %}
+
+  {% if teams %}
+  <ul class="space-y-3">
+    {% for team in teams %}
+    <li class="flex justify-between items-center p-4 border border-gray-200 rounded-lg bg-white shadow-sm hover:shadow transition">
+      <span class="font-medium text-gray-800">{{ team.name }}</span>
+      {% if can_edit %}
+      <a href="{{ url_for('edit_team', team_id=team.id) }}"
+        class="text-indigo-600 text-sm hover:underline flex items-center gap-1"
+        title="{{ _('Edit team') }}">
+        ✏️ {{ _('Edit') }}
+      </a>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="italic text-gray-500">{{ _('No teams added yet.') }}</p>
+  {% endif %}
+</section>
+
+
+<section id="standings" class="tab-section hidden mt-8">
+  <h2 class="text-xl font-semibold mb-4 flex items-center gap-2 text-gray-800">
+    📊 {{ _('Standings') }}
+  </h2>
+
+  {% if standings %}
+  <div class="overflow-x-auto animate-fade-in">
+    <table class="min-w-full bg-blue-50 border border-blue-200 rounded-lg shadow-md text-sm">
+      <thead class="sticky top-0 bg-blue-100 z-10 text-gray-700 font-medium">
+        <tr>
+          <th class="px-4 py-2 text-left">#</th>
+          <th class="px-4 py-2 text-left">🥇 {{ _('Team') }}</th>
+          <th class="px-2 py-2" title="{{ _('Games') }}">🎮 {{ _('G') }}</th>
+          <th class="px-2 py-2" title="{{ _('Wins') }}">✅ {{ _('W') }}</th>
+          <th class="px-2 py-2" title="{{ _('Draws') }}">➖ {{ _('D') }}</th>
+          <th class="px-2 py-2" title="{{ _('Losses') }}">❌ {{ _('L') }}</th>
+          <th class="px-2 py-2" title="{{ _('Goals For') }}">⚽ {{ _('GF') }}</th>
+          <th class="px-2 py-2" title="{{ _('Goals Against') }}">🛡️ {{ _('GA') }}</th>
+          <th class="px-2 py-2" title="{{ _('Points') }}">🏆 {{ _('Pts') }}</th>
+        </tr>
+      </thead>
+      <tbody class="text-gray-800">
+        {% for row in standings %}
+        {% set bg = '' %}
+        {% if loop.index == 1 %}
+          {% set bg = 'bg-gradient-to-r from-yellow-100 via-yellow-50 to-white' %}
+        {% elif loop.index == 2 %}
+          {% set bg = 'bg-indigo-100' %}
+        {% elif loop.index == 3 %}
+          {% set bg = 'bg-green-100' %}
+        {% endif %}
+        <tr class="border-t border-gray-200 {{ bg }}">
+          <td class="px-4 py-2">{{ loop.index }}</td>
+          <td class="px-4 py-2 font-medium">
+            {% if loop.index == 1 %}🥇 {% elif loop.index == 2 %}🥈 {% elif loop.index == 3 %}🥉 {% endif %}
+            {{ row.team.name }}
+          </td>
+          <td class="px-2 py-2 text-center">{{ row.played }}</td>
+          <td class="px-2 py-2 text-center">{{ row.wins }}</td>
+          <td class="px-2 py-2 text-center">{{ row.draws }}</td>
+          <td class="px-2 py-2 text-center">{{ row.losses }}</td>
+          <td class="px-2 py-2 text-center">{{ row.goals_for }}</td>
+          <td class="px-2 py-2 text-center">{{ row.goals_against }}</td>
+          <td class="px-2 py-2 text-center font-semibold text-indigo-700">{{ row.points }}</td>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="italic text-gray-500">{{ _('Standings are not available yet.') }}</p>
+  {% endif %}
+</section>
+
+<section id="calendar" class="tab-section hidden mt-8">
+  <h2 class="text-xl font-semibold mb-4 flex items-center gap-2 text-gray-800">
+    🗓️ {{ _('Match Calendar') }}
+  </h2>
+
+  {% if can_edit %}
+
+  <form method="POST" action="{{ url_for('generate_matches', tournament_id=tournament.id) }}" class="mb-4">
+    <button type="submit"
+            class="bg-green-600 text-white px-4 py-2 rounded-md font-medium hover:bg-green-700 transition flex items-center gap-2">
+      ⚙️ {{ _('Generate Calendar') }}
+    </button>
+  </form>
+
+
+  <form method="POST" action="{{ url_for('add_match', tournament_id=tournament.id) }}"
+        class="grid grid-cols-1 sm:grid-cols-5 gap-4 items-end mb-8">
+    <select name="team1_id" required class="form-select border-gray-300 rounded-md py-2 px-3">
+      {% for team in teams %}
+      <option value="{{ team.id }}">{{ team.name }}</option>
+      {% endfor %}
+    </select>
+
+    <select name="team2_id" required class="form-select border-gray-300 rounded-md py-2 px-3">
+      {% for team in teams %}
+      <option value="{{ team.id }}">{{ team.name }}</option>
+      {% endfor %}
+    </select>
+
+    <input type="date" name="date" required class="form-input border-gray-300 rounded-md py-2 px-3">
+    <input type="time" name="time" required class="form-input border-gray-300 rounded-md py-2 px-3">
+
+    <select name="status" class="form-select border-gray-300 rounded-md py-2 px-3">
+      <option value="scheduled">{{ _('Scheduled') }}</option>
+      <option value="finished">{{ _('Finished') }}</option>
+    </select>
+
+    <button type="submit"
+            class="sm:col-span-5 bg-purple-600 text-white px-5 py-2 rounded-md font-medium hover:bg-purple-700 transition">
+      ➕ {{ _('Add Match') }}
+    </button>
+
+  </form>
+  {% endif %}
+
+  {% if matches %}
+
+  <div class="overflow-x-auto bg-white border border-gray-200 rounded-lg shadow">
+    <table class="min-w-full text-sm text-left">
+      <thead class="bg-gray-100 text-gray-700">
+        <tr>
+          <th class="px-4 py-2">📅 {{ _('Date') }}</th>
+          <th class="px-4 py-2">🕒 {{ _('Time') }}</th>
+          <th class="px-4 py-2">⚔️ {{ _('Match') }}</th>
+          <th class="px-4 py-2 text-center">🔢 {{ _('Score') }}</th>
+          <th class="px-4 py-2 text-center">📍 {{ _('Status') }}</th>
+          {% if can_edit %}
+          <th class="px-4 py-2 text-center">⚙️</th>
+          {% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for match in matches %}
+        <tr class="border-t hover:bg-gray-50 transition">
+          <td class="px-4 py-2">{{ match.date.strftime('%Y-%m-%d') if match.date }}</td>
+          <td class="px-4 py-2">{{ match.time.strftime('%H:%M') if match.time }}</td>
+          <td class="px-4 py-2">
+            {{ match.team1.name }} <span class="text-gray-400">vs</span> {{ match.team2.name }}
+          </td>
+          <td class="px-4 py-2 text-center font-semibold">
+            {% if can_edit %}
+            <a href="{{ url_for('match_protocol', match_id=match.id) }}" class="text-indigo-600 hover:underline">
+              {{ match.score1 if match.score1 is not none else '-' }} : {{ match.score2 if match.score2 is not none else '-' }}
+            </a>
+            {% else %}
+            {{ match.score1 if match.score1 is not none else '-' }} : {{ match.score2 if match.score2 is not none else '-' }}
+            {% endif %}
+          </td>
+          <td class="px-4 py-2 text-center">
+            {% if match.status == 'scheduled' %}
+              <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">{{ _('Scheduled') }}</span>
+            {% elif match.status == 'finished' %}
+              <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">{{ _('Finished') }}</span>
+            {% else %}
+              <span class="text-gray-400">—</span>
+            {% endif %}
+          </td>
+          {% if can_edit %}
+          <td class="px-4 py-2 text-center">
+            <a href="{{ url_for('match_protocol', match_id=match.id) }}"
+              class="text-purple-600 hover:underline text-sm">{{ _('Edit') }}</a>
+          </td>
+          {% endif %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-gray-500 italic">{{ _('No matches have been added yet.') }}</p>
+  {% endif %}
+</section>
+
+
+  <section id="stats" class="tab-section hidden mt-8">
+  <h2 class="text-xl font-semibold mb-4 flex items-center gap-2 text-gray-800">
+    ⚽ Goals Leaders
+  </h2>
+
+  {% if top_scorers %}
+  <ul class="space-y-3">
+    {% for entry in top_scorers %}
+    {% set bg = '' %}
+    {% set border = '' %}
+    {% set icon = '' %}
+    {% if loop.index == 1 %}
+      {% set bg = 'ring-1 ring-yellow-400' %}
+      {% set icon = '🥇' %}
+    {% elif loop.index == 2 %}
+      {% set bg = 'ring-1 ring-blue-400' %}
+      {% set icon = '🥈' %}
+    {% elif loop.index == 3 %}
+      {% set bg = 'ring-1 ring-green-400' %}
+      {% set icon = '🥉' %}
+    {% else %}
+      {% set bg = 'ring-1 ring-gray-200' %}
+    {% endif %}
+
+    <li class="flex justify-between items-center p-4 rounded-lg bg-white {{ bg }} shadow-sm hover:shadow-md transition">
+      <div class="flex items-center gap-3 text-gray-800">
+        <span class="text-sm text-gray-500 font-semibold w-6 text-center">#{{ loop.index }}</span>
+        <span class="text-lg">{{ icon }}</span>
+        <div class="leading-tight">
+          <div class="font-medium">{{ entry.name }}</div>
+          <div class="text-sm text-gray-500">{{ entry.team }}</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-1 font-semibold text-gray-700">
+        ⚽ <span class="text-base">{{ entry.goals }}</span>
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="italic text-gray-500">Голов пока нет.</p>
+  {% endif %}
+</section>
+
+
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const tabs = document.querySelectorAll(".tab-link");
+    const sections = document.querySelectorAll(".tab-section");
+
+    function activateTab(tabId) {
+      sections.forEach(section => {
+        section.classList.toggle("hidden", section.id !== tabId);
+      });
+      tabs.forEach(tab => {
+        tab.classList.toggle("border-indigo-600", tab.dataset.tab === tabId);
+        tab.classList.toggle("text-indigo-600", tab.dataset.tab === tabId);
+      });
+    }
+
+    tabs.forEach(tab => {
+      tab.addEventListener("click", function (e) {
+        e.preventDefault();
+        const id = this.dataset.tab;
+        history.replaceState(null, null, "#" + id);
+        activateTab(id);
+      });
+    });
+
+    const hash = window.location.hash.substring(1);
+    const defaultTab = hash || "info";
+    activateTab(defaultTab);
+  });
+</script>
+{% endblock %}

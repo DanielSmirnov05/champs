@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block title %}{{ _('Profile') }} — Champion{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto mt-8 px-4">
+  <h2 class="text-2xl font-bold mb-6">
+    {% if current_user.id == user.id %}
+      👤 {{ _('My Profile') }}
+    {% else %}
+      👤 {{ _('User Profile') }}
+    {% endif %}
+  </h2>
+
+  <div class="flex flex-col md:flex-row gap-6">
+    <!-- Avatar -->
+    <div class="flex flex-col items-center text-center">
+      <img src="{{ url_for('static', filename=user.avatar_url) if user.avatar_url else url_for('static', filename='default-avatar.png') }}"
+           alt=""
+           class="w-32 h-32 rounded-full object-cover shadow mb-2">
+      <p class="text-sm text-gray-500">{{ _('Avatar') }}</p>
+    </div>
+
+    <!-- Form -->
+    <div class="flex-1">
+      <form method="POST" enctype="multipart/form-data" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">{{ _('Username') }}</label>
+          <input type="text" name="name" value="{{ user.name }}" required
+                 class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 shadow-sm text-sm focus:ring-purple-500 focus:border-purple-500">
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700">{{ _('First Name') }}</label>
+          <input type="text" name="first_name" value="{{ user.first_name or '' }}"
+                 class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 shadow-sm text-sm">
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700">{{ _('Last Name') }}</label>
+          <input type="text" name="last_name" value="{{ user.last_name or '' }}"
+                 class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 shadow-sm text-sm">
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700">{{ _('Phone Number') }}</label>
+          <input type="text" name="phone" value="{{ user.phone or '' }}"
+                 class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 shadow-sm text-sm">
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700">{{ _('Description') }}</label>
+          <textarea name="bio"
+                    class="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 shadow-sm text-sm"
+                    rows="3">{{ user.bio or '' }}</textarea>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700">{{ _('Upload Avatar') }}</label>
+          <input type="file" name="avatar"
+                 class="mt-1 block w-full text-sm border border-gray-300 rounded-lg px-3 py-2 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-purple-600 file:text-white hover:file:bg-purple-700">
+        </div>
+
+        <div>
+          <button type="submit"
+                  class="bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium px-6 py-2 rounded-lg shadow transition">
+            💾 {{ _('Save Changes') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Statistics -->
+  <hr class="my-8">
+  <h3 class="text-lg font-semibold mb-3">📊 {{ _('Statistics') }}</h3>
+  <ul class="space-y-1 text-sm text-gray-700">
+    <li>🏆 <strong>{{ user.tournaments_created|length if user.tournaments_created else 0 }}</strong> {{ _('tournaments created') }}</li>
+    <li>💬 <strong>{{ user.discussions_count }}</strong> {{ _('discussions created') }}</li>
+    <li>🗨️ <strong>{{ user.messages_count }}</strong> {{ _('messages sent') }}</li>
+  </ul>
+
+</div>
+{% endblock %}

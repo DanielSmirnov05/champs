@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}{{ discussion.title }} — {{ _('Discussion') }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-8">
+  <!-- Title -->
+  <h2 class="text-2xl font-bold text-gray-800 mb-2">{{ discussion.title }}</h2>
+  {% if discussion.description %}
+    <p class="text-gray-600 mb-4">{{ discussion.description }}</p>
+  {% endif %}
+  <hr class="mb-6">
+
+  <!-- Chat -->
+  <div class="bg-white border border-gray-200 rounded-xl p-4 mb-6 space-y-4 max-h-[60vh] overflow-y-auto">
+    {% for message, user in messages %}
+      <div class="{% if current_user.is_authenticated and user.id == current_user.id %}text-right{% endif %}">
+        <div class="text-sm text-gray-500 flex items-center gap-2 {% if current_user.is_authenticated and user.id == current_user.id %}justify-end{% endif %}">
+          <a href="{{ url_for('user_profile', user_id=user.id) }}" class="font-medium text-blue-600 hover:underline">
+            @{{ user.name }}
+          </a>
+          <span class="text-xs text-gray-400">{{ message.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+        </div>
+        <div class="inline-block mt-1 px-4 py-2 rounded-xl bg-gray-100 text-sm text-gray-800 max-w-[80%] {% if current_user.is_authenticated and user.id == current_user.id %}bg-purple-100 text-right{% endif %}">
+          {{ message.content }}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <!-- Message form -->
+  {% if current_user.is_authenticated %}
+    <form method="post" class="flex flex-col sm:flex-row gap-3 items-stretch">
+      <textarea name="content" rows="2" required
+                class="w-full rounded-lg border border-gray-300 p-3 focus:ring-purple-500 focus:outline-none resize-y"
+                placeholder="{{ _('Write a message...') }}"></textarea>
+      <button type="submit"
+              class="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-5 py-2 rounded-lg transition">
+        ➤ {{ _('Send') }}
+      </button>
+    </form>
+  {% else %}
+    <p class="text-sm text-gray-600 mt-2">
+      <a href="{{ url_for('login') }}" class="text-purple-600 underline">{{ _('Log in') }}</a> {{ _('to send messages.') }}
+    </p>
+  {% endif %}
+
+  <!-- Back link -->
+  <div class="mt-6">
+    <a href="{{ url_for('discussions_list') }}"
+       class="inline-block text-sm text-gray-600 hover:underline">← {{ _('Back to discussions') }}</a>
+  </div>
+</div>
+{% endblock %}
+
+

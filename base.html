@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="{{ get_locale() }}">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Champion{% endblock %}</title>
+
+    <!-- FONT -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <!-- TAILWIND -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- META -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- CUSTOM STYLES -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .link-button {
+            background: none;
+            border: none;
+            padding: 0;
+            margin: 0;
+            font: inherit;
+            color: inherit;
+            cursor: pointer;
+        }
+
+        .nav-link {
+            position: relative;
+            color: white;
+            transition: color 0.2s ease;
+            text-shadow: 0 0 0.5px rgba(0, 0, 0, 0.5);
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: -2px;
+            width: 0%;
+            height: 2px;
+            background-color: #facc15;
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: #facc15;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-900">
+
+<!-- HEADER -->
+<header class="bg-indigo-900 text-white sticky top-0 shadow z-50">
+    <div class="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
+        <a href="{{ url_for('index') }}" class="text-xl font-bold flex items-center gap-2">
+            🏆 Champion
+        </a>
+
+        <nav class="flex flex-wrap gap-6 text-base font-semibold tracking-tight">
+            <a href="{{ url_for('view_tournaments') }}" class="nav-link">{{ _('Tournaments') }}</a>
+
+            {% if current_user.is_authenticated %}
+                {% if current_user.role in ['admin', 'organizer', 'king'] %}
+                    <a href="{{ url_for('add_tournament') }}" class="nav-link">{{ _('Create Tournament') }}</a>
+                    <a href="{{ url_for('my_tournaments') }}" class="nav-link">{{ _('My Tournaments') }}</a>
+                {% endif %}
+                <a href="{{ url_for('news_list') }}" class="nav-link">{{ _('News') }}</a>
+                <a href="{{ url_for('discussions_list') }}" class="nav-link">{{ _('Discussions') }}</a>
+                {% if current_user.role in ['admin', 'king'] %}
+                    <a href="{{ url_for('admin_panel') }}" class="nav-link">{{ _('Admin Panel') }}</a>
+                {% endif %}
+                <a href="{{ url_for('profile') }}" class="nav-link">{{ _('Profile') }}</a>
+                <form action="{{ url_for('logout') }}" method="post" class="inline">
+                    <button type="submit" class="link-button nav-link text-red-300 hover:text-red-400">{{ _('Log out') }}</button>
+                </form>
+            {% else %}
+                <a href="{{ url_for('login') }}" class="nav-link">{{ _('Log in') }}</a>
+                <a href="{{ url_for('register') }}" class="nav-link">{{ _('Register') }}</a>
+            {% endif %}
+        </nav>
+    </div>
+</header>
+
+<!-- FLASH MESSAGES -->
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <div class="max-w-4xl mx-auto mt-4 px-4">
+            <ul class="space-y-2">
+                {% for message in messages %}
+                    <li class="bg-yellow-100 text-yellow-800 px-4 py-2 rounded shadow">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+{% endwith %}
+
+<!-- MAIN CONTENT -->
+<main class="max-w-6xl mx-auto px-4 py-10">
+    {% block content %}{% endblock %}
+</main>
+
+<!-- FOOTER -->
+<footer class="bg-white border-t py-6 mt-10 text-center text-sm text-gray-500">
+    <p>&copy; 2025 Champion Project |
+        <a href="#" class="hover:underline">{{ _('Contact') }}</a> |
+        <a href="#" class="hover:underline">{{ _('Privacy Policy') }}</a>
+    </p>
+</footer>
+
+<!-- Lucide Icons -->
+
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    lucide.createIcons();
+  });
+</script>
+
+</body>
+</html>
+
+

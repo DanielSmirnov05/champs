@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}{{ _('Browse Tournaments') }} — Champion{% endblock %}
+
+{% block content %}
+<div class="mt-6 px-4 animate-fade-in">
+
+
+    <h1 class="text-3xl font-bold mb-6 flex items-center gap-2">
+        🏆 <span>{{ _('Tournament List') }}</span>
+    </h1>
+
+
+    <form method="get" class="mb-8 flex flex-col md:flex-row md:items-end gap-4">
+
+        <div class="flex flex-col w-full md:w-1/2">
+            <label for="search" class="text-sm font-medium mb-1">{{ _('Search by name') }}</label>
+            <input type="text" name="search" id="search" value="{{ request.args.get('search', '') }}"
+                   class="px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-400 focus:outline-none"
+                   placeholder="{{ _('Enter tournament name...') }}">
+        </div>
+
+
+        <div class="flex flex-col w-full md:w-1/4">
+            <label for="sort" class="text-sm font-medium mb-1">{{ _('Sort by') }}</label>
+            <select name="sort" id="sort"
+                    class="px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-400 focus:outline-none">
+                <option value="date_desc" {% if request.args.get('sort') == 'date_desc' %}selected{% endif %}>{{ _('Newest first') }}</option>
+                <option value="date_asc" {% if request.args.get('sort') == 'date_asc' %}selected{% endif %}>{{ _('Oldest first') }}</option>
+                <option value="name" {% if request.args.get('sort') == 'name' %}selected{% endif %}>{{ _('By name (A–Z)') }}</option>
+                <option value="teams" {% if request.args.get('sort') == 'teams' %}selected{% endif %}>{{ _('By team count') }}</option>
+            </select>
+        </div>
+
+        <div>
+            <button type="submit"
+                    class="mt-1 md:mt-0 px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
+                🔍 {{ _('Search') }}
+            </button>
+        </div>
+    </form>
+
+
+    {% if tournaments %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for tournament in tournaments %}
+        <div class="bg-white rounded-2xl shadow-sm hover:shadow-lg hover:scale-[1.02] transition-all duration-300 border border-gray-200 p-6 flex flex-col justify-between">
+            <div class="mb-4">
+                <h3 class="text-lg font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                    🏟 <span>{{ tournament.name }}</span>
+                </h3>
+                <p class="text-sm text-gray-600">
+                    {{ _('Teams') }}: <span class="font-medium text-gray-800">{{ tournament.teams|length }}</span>
+                </p>
+            </div>
+            <a href="{{ url_for('tournament_page', tournament_id=tournament.id) }}"
+               class="mt-auto inline-block text-center px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition">
+                {{ _('View') }}
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-gray-500 italic mt-4">{{ _('No results found for the selected criteria.') }}</p>
+    {% endif %}
+</div>
+{% endblock %}

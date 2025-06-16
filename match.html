@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+{% block title %}Match report — {{ match.team1.name }} vs {{ match.team2.name }}{% endblock %}
+
+{% block content %}
+<style>
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+
+  .btn-blue {
+    background: white;
+    color: #2563eb;
+    border-color: #2563eb;
+  }
+
+  .btn-blue:hover {
+    background: #2563eb;
+    color: white;
+  }
+
+  .btn-red {
+    background: white;
+    color: #dc2626;
+    border: 1px solid #dc2626;
+  }
+
+  .btn-red:hover {
+    background: #dc2626;
+    color: white;
+  }
+
+  .btn-green {
+    background: white;
+    color: #16a34a;
+    border: 1px solid #16a34a;
+  }
+
+  .btn-green:hover {
+    background: #16a34a;
+    color: white;
+  }
+
+  .btn-grey {
+    background: white;
+    color: #374151;
+    border: 1px solid #d1d5db;
+  }
+
+  .btn-grey:hover {
+    background: #f3f4f6;
+  }
+
+  .btn-icon {
+    padding: 0.3rem 0.6rem;
+    font-size: 1rem;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    background-color: white;
+    color: #374151;
+    transition: all 0.2s ease;
+  }
+
+  .btn-icon:hover {
+    background-color: #f3f4f6;
+    color: #111827;
+  }
+
+  .danger:hover {
+    border-color: #ef4444;
+    color: #b91c1c;
+  }
+
+  .form-inline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .input-text, .input-text-small {
+    padding: 0.45rem 0.75rem;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+  }
+
+  .input-text-small {
+    width: 80px;
+  }
+
+  .players-list {
+    padding-left: 1.2rem;
+    list-style: disc;
+  }
+</style>
+
+<div class="card">
+  <h1 class="text-xl font-bold mb-1">📋 Match report</h1>
+  <h2 class="text-lg text-gray-700 mb-4">{{ match.team1.name }} vs {{ match.team2.name }}</h2>
+
+  <h3 class="font-semibold text-gray-800 mb-2">🗓️ Match information</h3>
+  <form method="POST" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; max-width: 600px;">
+    <div>
+      <label>Date:</label>
+      <input type="date" name="date" value="{{ match.date.strftime('%Y-%m-%d') if match.date }}" required class="input-text">
+    </div>
+    <div>
+      <label>Time:</label>
+      <input type="time" name="time" value="{{ match.time.strftime('%H:%M') if match.time }}" required class="input-text">
+    </div>
+    <div>
+      <label>Place:</label>
+      <input type="text" name="location" value="{{ match.location or '' }}" placeholder="Stadion, Location..." class="input-text">
+    </div>
+    <div>
+      <label>Status:</label>
+      <select name="status" class="input-text">
+        <option value="scheduled" {% if match.status == 'scheduled' %}selected{% endif %}>Scheduled</option>
+        <option value="live" {% if match.status == 'live' %}selected{% endif %}>Live</option>
+        <option value="finished" {% if match.status == 'finished' %}selected{% endif %}>Completed</option>
+      </select>
+    </div>
+    <div style="grid-column: span 2;">
+      <button type="submit" name="save_match_info" class="btn btn-blue">💾 Save details</button>
+    </div>
+  </form>
+
+  {% if current_user.is_authenticated and (current_user.role == 'admin' or (current_user.role == 'organizer' and match.tournament.creator_id == current_user.id)) %}
+  <div style="margin-top: 1rem;">
+    <form method="POST" action="{{ url_for('delete_match', match_id=match.id) }}" onsubmit="return confirm('Delete a match?');">
+      <button type="submit" class="btn btn-red">🗑️ Delete match</button>
+    </form>
+  </div>
+  {% endif %}
+
+  <form method="post" class="form-inline" style="margin-top: 2rem;">
+    <label class="font-medium text-gray-800">{{ match.team1.name }}:</label>
+    <input type="number" name="score1" value="{{ match.score1 or 0 }}" min="0" class="input-text-small">
+    <label class="font-medium text-gray-800">{{ match.team2.name }}:</label>
+    <input type="number" name="score2" value="{{ match.score2 or 0 }}" min="0" class="input-text-small">
+    <button type="submit" name="save_score" class="btn btn-blue">💾 Save score</button>
+  </form>
+
+  <div class="mt-3">
+    <a href="{{ url_for('match_lineup', match_id=match.id) }}" class="btn btn-grey">📋 Lineups for the match</a>
+  </div>
+
+  <hr class="my-6">
+
+  <h3 class="font-semibold text-gray-800 mb-2">⚽ Add a goal</h3>
+  <form method="post" class="form-inline">
+    <select name="scorer" required class="input-text">
+      <optgroup label="{{ match.team1.name }}">
+        {% for entry in lineup_team1 %}
+        <option value="{{ entry.player.id }}">{{ entry.player.name }} (№{{ entry.player.number }})</option>
+        {% endfor %}
+      </optgroup>
+      <optgroup label="{{ match.team2.name }}">
+        {% for entry in lineup_team2 %}
+        <option value="{{ entry.player.id }}">{{ entry.player.name }} (№{{ entry.player.number }})</option>
+        {% endfor %}
+      </optgroup>
+    </select>
+    <input type="number" name="minute" placeholder="минута" min="1" max="120" required class="input-text-small">
+    <button type="submit" name="add_goal" class="btn btn-green">➕ Add</button>
+  </form>
+
+  <hr class="my-6">
+
+
+  <h3 class="font-semibold text-gray-800 mb-2">📌 Goals</h3>
+  {% if match.goals %}
+  <ul class="players-list">
+    {% for goal in match.goals %}
+    <li>
+      <strong>{{ goal.minute }}'</strong> — {{ goal.scorer }} ({{ goal.team.name }})
+      <form method="POST" action="{{ url_for('delete_goal', goal_id=goal.id) }}" style="display:inline;">
+        <button type="submit" class="btn-icon danger" title="Удалить">&#10060;</button>
+      </form>
+      <a href="{{ url_for('edit_goal', goal_id=goal.id) }}" class="btn-icon" title="Edit">✏️</a>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="text-gray-500 italic">⚠️ No goals yet</p>
+  {% endif %}
+
+  <div class="mt-8">
+    <a href="{{ url_for('tournament_page', tournament_id=match.tournament.id) }}"
+       class="inline-block border border-gray-500 text-gray-700 hover:bg-gray-100 px-4 py-2 rounded-md transition">
+      ← Back to tournament
+    </a>
+  </div>
+</div>
+{% endblock %}

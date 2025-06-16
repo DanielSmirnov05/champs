@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Match protocol') }}{% endblock %}
+
+{% block content %}
+<div class="card max-w-3xl mx-auto">
+  <h1 class="text-2xl font-semibold mb-2">📋 {{ _('Match protocol') }}</h1>
+  <h2 class="text-lg text-gray-700 mb-4">{{ match.team1.name }} vs {{ match.team2.name }}</h2>
+
+  <div class="mb-4 text-sm text-gray-600">
+    <p><strong>{{ _('Date') }}:</strong> {{ match.date }} {{ match.time }}</p>
+    <p><strong>{{ _('Status') }}:</strong> {{ match.status }}</p>
+  </div>
+
+  <!-- Score -->
+  <h3 class="text-lg font-semibold text-gray-800 mb-2">📌 {{ _('Score') }}</h3>
+  {% if current_user.is_authenticated and current_user.role in ['admin', 'organizer'] %}
+    <form method="POST" action="{{ url_for('update_score', match_id=match.id) }}" class="flex gap-3 items-center">
+      <input type="number" name="score1" value="{{ match.score1 or '' }}" required class="w-16 px-2 py-1 border rounded text-center">
+      <span class="text-lg">:</span>
+      <input type="number" name="score2" value="{{ match.score2 or '' }}" required class="w-16 px-2 py-1 border rounded text-center">
+      <button type="submit" class="border border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white px-4 py-1.5 rounded-md transition">💾 {{ _('Save') }}</button>
+    </form>
+  {% else %}
+    <p class="text-xl font-semibold text-gray-800">{{ match.score1 if match.score1 is not none else '-' }} : {{ match.score2 if match.score2 is not none else '-' }}</p>
+  {% endif %}
+
+  <hr class="my-6">
+
+  <!-- Lineups -->
+  <h3 class="text-lg font-semibold text-gray-800 mb-4">👥 {{ _('Lineups') }}</h3>
+  <div class="grid sm:grid-cols-2 gap-8">
+    <div>
+      <h4 class="font-medium mb-2">{{ match.team1.name }}</h4>
+      <ul class="mb-2 space-y-1">
+        {% for player in team1_lineup %}
+          <li class="text-sm text-gray-700">{{ player.name }}</li>
+        {% endfor %}
+      </ul>
+      {% if current_user.is_authenticated and current_user.role in ['admin', 'organizer'] %}
+        <form method="POST" action="{{ url_for('add_lineup_player', match_id=match.id, team_id=match.team1.id) }}" class="flex gap-2">
+          <input type="text" name="player_name" placeholder="{{ _('Player name') }}" required class="flex-1 px-3 py-1 border rounded">
+          <button type="submit" class="border border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white px-3 py-1 rounded-md transition">{{ _('Add') }}</button>
+        </form>
+      {% endif %}
+    </div>
+    <div>
+      <h4 class="font-medium mb-2">{{ match.team2.name }}</h4>
+      <ul class="mb-2 space-y-1">
+        {% for player in team2_lineup %}
+          <li class="text-sm text-gray-700">{{ player.name }}</li>
+        {% endfor %}
+      </ul>
+      {% if current_user.is_authenticated and current_user.role in ['admin', 'organizer'] %}
+        <form method="POST" action="{{ url_for('add_lineup_player', match_id=match.id, team_id=match.team2.id) }}" class="flex gap-2">
+          <input type="text" name="player_name" placeholder="{{ _('Player name') }}" required class="flex-1 px-3 py-1 border rounded">
+          <button type="submit" class="border border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white px-3 py-1 rounded-md transition">{{ _('Add') }}</button>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+
+  <hr class="my-6">
+
+  <!-- Goals -->
+  <h3 class="text-lg font-semibold text-gray-800 mb-2">⚽ {{ _('Goals') }}</h3>
+  <ul class="mb-4 space-y-1">
+    {% for goal in goals %}
+      <li class="text-sm text-gray-800">{{ goal.minute }}' — {{ goal.player.name }} ({{ goal.team.name }})</li>
+    {% endfor %}
+  </ul>
+
+  {% if current_user.is_authenticated and current_user.role in ['admin', 'organizer'] %}
+    <form method="POST" action="{{ url_for('add_goal', match_id=match.id) }}" class="flex flex-wrap items-end gap-3">
+      <div>
+        <label class="block text-sm">{{ _('Minute') }}:</label>
+        <input type="number" name="minute" required class="w-24 px-2 py-1 border rounded">
+      </div>
+      <div>
+        <label class="block text-sm">{{ _('Player') }}:</label>
+        <select name="player_id" required class="px-2 py-1 border rounded">
+          {% for player in all_players %}
+            <option value="{{ player.id }}">{{ player.name }} ({{ player.team.name }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="border border-green-600 text-green-600 hover:bg-green-600 hover:text-white px-4 py-1.5 rounded-md transition">➕ {{ _('Add goal') }}</button>
+    </form>
+  {% endif %}
+</div>
+{% endblock %}

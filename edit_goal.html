@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Edit Goal') }} — {{ match.team1.name }} vs {{ match.team2.name }}{% endblock %}
+
+{% block content %}
+<div class="card">
+  <h1>✏️ {{ _('Edit Goal') }}</h1>
+  <h2>{{ match.team1.name }} vs {{ match.team2.name }}</h2>
+
+  <form method="post">
+    <label for="team_id">{{ _('Team:') }}</label>
+    <select name="team_id" id="team_id" required>
+      <option value="{{ match.team1.id }}" {% if goal.team_id == match.team1.id %}selected{% endif %}>{{ match.team1.name }}</option>
+      <option value="{{ match.team2.id }}" {% if goal.team_id == match.team2.id %}selected{% endif %}>{{ match.team2.name }}</option>
+    </select>
+    <br><br>
+
+    <label for="scorer">{{ _('Player (name or number):') }}</label>
+    <input type="text" name="scorer" id="scorer" value="{{ goal.scorer }}" required>
+    <br><br>
+
+    <label for="minute">{{ _('Minute:') }}</label>
+    <input type="number" name="minute" id="minute" value="{{ goal.minute }}" required min="1" max="120">
+    <br><br>
+
+    <button type="submit" class="btn btn-blue">💾 {{ _('Save changes') }}</button>
+  </form>
+
+  <p><a href="{{ url_for('match_protocol', match_id=match.id) }}" class="link-back">← {{ _('Back to protocol') }}</a></p>
+</div>
+{% endblock %}

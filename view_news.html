@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}{{ news.title }}{% endblock %}
+
+{% block content %}
+<a href="{{ url_for('news_list') }}" style="
+  display: inline-block;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+  text-decoration: none;
+  color: #2563eb;
+  font-weight: 500;
+">
+  ← {{ _('Back to news list') }}
+</a>
+
+<h1 style="font-size: 2rem; font-weight: bold; margin-bottom: 0.5rem;">{{ news.title }}</h1>
+<p style="color: #666; font-size: 0.95rem;">
+  🗓️ {{ news.created_at.strftime('%d.%m.%Y') }} |
+  🏷️ {{ _(news.news_type) }}
+</p>
+<hr style="margin: 1rem 0;">
+
+{% if news.image_path %}
+  <div style="margin-bottom: 1.5rem; text-align: center;">
+    <img src="{{ url_for('static', filename='uploads/' ~ news.image_path) }}" alt="{{ _('News image') }}"
+         style="max-width: 100%; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+  </div>
+{% endif %}
+
+<div style="font-size: 1.1rem; line-height: 1.8; color: #2c2c2c; white-space: pre-line;">
+  {{ news.content }}
+</div>
+
+{% if current_user.is_authenticated and current_user.role in ['admin', 'king'] %}
+
+  <div style="margin-top: 2rem;">
+    <a href="{{ url_for('edit_news', news_id=news.id) }}" class="btn btn-blue">✏️ {{ _('Edit') }}</a>
+    <form method="POST" action="{{ url_for('delete_news', news_id=news.id) }}" style="display:inline;">
+      <button type="submit" class="btn btn-red" onclick="return confirm('{{ _('Delete this news item?') }}')">🗑️ {{ _('Delete') }}</button>
+    </form>
+  </div>
+{% endif %}
+{% endblock %}
+
+
+

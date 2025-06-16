@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Add News') }} — Champion{% endblock %}
+
+{% block content %}
+<div style="
+  background: #fff;
+  max-width: 720px;
+  margin: 2rem auto;
+  padding: 2rem 2.5rem;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  border: 1px solid #e5e7eb;
+  font-family: system-ui, sans-serif;
+">
+  <h1 style="font-size: 1.9rem; font-weight: 700; margin-bottom: 2rem; color: #111827; display: flex; align-items: center; gap: 0.5rem;">
+    📜 {{ _('Add News') }}
+  </h1>
+
+  <form method="POST" style="display: flex; flex-direction: column; gap: 1.5rem;">
+    <div>
+      <label for="title" style="font-weight: 600; color: #374151;">📰 {{ _('Title') }}</label>
+      <input type="text" id="title" name="title" required
+             style="width: 100%; padding: 0.7rem; border: 1px solid #d1d5db; border-radius: 10px; font-size: 1rem;">
+    </div>
+
+    <div>
+      <label for="short_description" style="font-weight: 600; color: #374151;">📌 {{ _('Short Description') }}</label>
+      <input type="text" id="short_description" name="short_description" required
+             style="width: 100%; padding: 0.7rem; border: 1px solid #d1d5db; border-radius: 10px; font-size: 1rem;">
+    </div>
+
+    <div>
+      <label for="content" style="font-weight: 600; color: #374151;">📄 {{ _('Full Content') }}</label>
+      <textarea id="content" name="content" rows="8" required
+                style="width: 100%; padding: 0.7rem; border: 1px solid #d1d5db; border-radius: 10px; font-size: 1rem;"></textarea>
+    </div>
+
+    <div>
+      <label for="news_type" style="font-weight: 600; color: #374151;">🏷️ {{ _('News Type') }}</label>
+      <select id="news_type" name="news_type"
+              style="width: 100%; padding: 0.7rem; border: 1px solid #d1d5db; border-radius: 10px; font-size: 1rem;">
+        <option value="обновление">{{ _('Update') }}</option>
+        <option value="реклама">{{ _('Advertisement') }}</option>
+        <option value="спорт">{{ _('Sports News') }}</option>
+      </select>
+    </div>
+
+    <div style="text-align: right;">
+      <button type="submit" style="
+        background-color: #4f46e5;
+        color: white;
+        padding: 0.75rem 1.6rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        border: none;
+        cursor: pointer;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        transition: background-color 0.2s ease;
+      " onmouseover="this.style.backgroundColor='#4338ca'" onmouseout="this.style.backgroundColor='#4f46e5'">
+        📢 {{ _('Publish') }}
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

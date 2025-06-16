@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}{{ _('Discussions') }} — Champion{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 py-8">
+  <!-- Header -->
+  <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-2 mb-6">💬 {{ _('Discussions') }}</h2>
+
+  <!-- Actions -->
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+    <!-- Create Button -->
+    <a href="{{ url_for('create_discussion') }}"
+       class="inline-block bg-purple-600 hover:bg-purple-700 text-white font-medium px-5 py-2 rounded-xl transition">
+      ➕ {{ _('Create Discussion') }}
+    </a>
+
+    <!-- Sorting -->
+    <form method="get" class="flex items-center gap-2">
+      <label for="sort" class="text-sm text-gray-600">{{ _('Sort by:') }}</label>
+      <select name="sort" id="sort"
+              onchange="this.form.submit()"
+              class="border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-purple-500 focus:border-purple-500">
+        <option value="newest" {% if sort == 'newest' %}selected{% endif %}>{{ _('Newest first') }}</option>
+        <option value="activity" {% if sort == 'activity' %}selected{% endif %}>{{ _('By activity') }}</option>
+        <option value="alphabet" {% if sort == 'alphabet' %}selected{% endif %}>{{ _('Alphabetically') }}</option>
+      </select>
+    </form>
+  </div>
+
+  <!-- Discussions List -->
+  {% if discussions %}
+    <div class="space-y-4">
+      {% for d, author, msg_count, last_msg_time in discussions %}
+        <div class="bg-white border border-gray-200 rounded-xl p-4 hover:bg-gray-50 transition">
+          <div class="flex flex-wrap justify-between items-center">
+            <a href="{{ url_for('discussion_chat', discussion_id=d.id) }}"
+               class="text-lg font-semibold text-purple-700 hover:underline">
+              {{ d.title }}
+            </a>
+            {% if last_msg_time and (now - last_msg_time).total_seconds() < 86400 %}
+              <span class="ml-2 inline-block bg-green-100 text-green-800 text-xs font-semibold px-3 py-1 rounded-full">
+                {{ _('New') }}
+              </span>
+            {% endif %}
+          </div>
+          <div class="text-sm text-gray-600 mt-2 flex flex-wrap gap-4 items-center">
+            👤 <a href="{{ url_for('user_profile', user_id=author.id) }}" class="font-medium text-blue-600 hover:underline">
+              @{{ author.name }}
+            </a>
+             🕒 {{ d.created_at.strftime('%d.%m.%Y %H:%M') }}
+             💬 {{ msg_count }} {{ _('messages') if msg_count != 1 else _('message') }}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="text-gray-500 italic mt-6">{{ _('No discussions yet.') }}</p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% block title %}{{ _('Admin Panel') }} — Champion{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 py-8">
+  <h1 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">🛠 {{ _('Admin Panel') }}</h1>
+
+  <!-- Stats -->
+  <div class="grid sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+    <div class="bg-white p-4 rounded-xl shadow text-center">👥 <span class="font-semibold">{{ user_count }}</span><br><span class="text-sm text-gray-500">{{ _('Users') }}</span></div>
+    <div class="bg-white p-4 rounded-xl shadow text-center">🏆 <span class="font-semibold">{{ tournament_count }}</span><br><span class="text-sm text-gray-500">{{ _('Tournaments') }}</span></div>
+    <div class="bg-white p-4 rounded-xl shadow text-center">💬 <span class="font-semibold">{{ discussion_count }}</span><br><span class="text-sm text-gray-500">{{ _('Discussions') }}</span></div>
+    <div class="bg-white p-4 rounded-xl shadow text-center">📰 <span class="font-semibold">{{ news_count }}</span><br><span class="text-sm text-gray-500">{{ _('News') }}</span></div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="flex flex-wrap gap-2 mb-4">
+    <button class="tab-button bg-purple-600 text-white px-4 py-2 rounded-lg text-sm active" onclick="openTab('usersTab', this)">👤 {{ _('Users') }}</button>
+    <button class="tab-button bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm" onclick="openTab('tournamentsTab', this)">🏆 {{ _('Tournaments') }}</button>
+    <button class="tab-button bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm" onclick="openTab('discussionsTab', this)">💬 {{ _('Discussions') }}</button>
+  </div>
+
+<!-- USERS -->
+<div id="usersTab" class="tab-content active">
+  <input type="text" id="userFilter" onkeyup="filterTable('userTable', this.value)"
+         placeholder="🔍 {{ _('Filter by nickname...') }}"
+         class="mb-3 w-full max-w-sm border border-gray-300 rounded-lg px-4 py-2 text-sm">
+  <div class="overflow-auto">
+    <table id="userTable" class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+      <thead class="bg-gray-100 text-left">
+        <tr>
+          <th class="p-2">ID</th>
+          <th class="p-2">{{ _('Nickname') }}</th>
+          <th class="p-2">Email</th>
+          <th class="p-2">{{ _('Role') }}</th>
+          <th class="p-2">{{ _('Actions') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for user in users %}
+        <tr class="border-t">
+          <td class="p-2">{{ user.id }}</td>
+          <td class="p-2">
+            <a href="{{ url_for('user_profile', user_id=user.id) }}" class="text-blue-600 hover:underline">@{{ user.name }}</a>
+          </td>
+          <td class="p-2">{{ user.email }}</td>
+          <td class="p-2">
+            {% if user.role == 'king' %}
+              <span class="text-purple-700 font-semibold">👑 KING</span>
+            {% elif user.role == 'admin' %}
+              <span class="text-red-700 font-semibold">ADMIN</span>
+            {% elif user.role == 'organizer' %}
+              <span class="text-green-700 font-semibold">ORGANIZER</span>
+            {% else %}
+              <span class="text-gray-700">viewer</span>
+            {% endif %}
+          </td>
+          <td class="p-2 flex items-center gap-2">
+            {% if current_user.role == 'king' %}
+              {% if user.role == 'organizer' %}
+                <a href="{{ url_for('promote_user', user_id=user.id) }}"
+                   class="text-green-600 hover:text-green-800"
+                   title="{{ _('Promote to Admin') }}">
+                  <i data-lucide="arrow-up-circle" class="w-5 h-5"></i>
+                </a>
+              {% elif user.role == 'admin' %}
+                <a href="{{ url_for('demote_user', user_id=user.id) }}"
+                   class="text-yellow-600 hover:text-yellow-800"
+                   title="{{ _('Demote to Organizer') }}">
+                  <i data-lucide="arrow-down-circle" class="w-5 h-5"></i>
+                </a>
+              {% endif %}
+            {% endif %}
+
+            {% if user.role != 'king' %}
+              <form method="post" action="{{ url_for('delete_user', user_id=user.id) }}" class="inline"
+                    onsubmit="return confirm('{{ _('Delete this user?') }}')">
+                <button type="submit" class="text-red-500 hover:text-red-700" title="{{ _('Delete') }}">
+                  <i data-lucide="x-circle" class="w-5 h-5"></i>
+                </button>
+              </form>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+
+
+  <!-- TOURNAMENTS -->
+  <div id="tournamentsTab" class="tab-content hidden">
+    <input type="text" id="tournamentFilter" onkeyup="filterTable('tournamentTable', this.value)"
+           placeholder="🔍 {{ _('Filter by name...') }}"
+           class="mb-3 w-full max-w-sm border border-gray-300 rounded-lg px-4 py-2 text-sm">
+    <div class="overflow-auto">
+      <table id="tournamentTable" class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+        <thead class="bg-gray-100 text-left">
+          <tr><th class="p-2">ID</th><th class="p-2">{{ _('Name') }}</th><th class="p-2">{{ _('Organizer') }}</th><th class="p-2">{{ _('Date') }}</th></tr>
+        </thead>
+        <tbody>
+        {% for t in tournaments %}
+          <tr class="border-t">
+            <td class="p-2">{{ t.id }}</td>
+            <td class="p-2">
+              <a href="{{ url_for('view_tournament', tournament_id=t.id) }}" class="text-purple-600 hover:underline">{{ t.name }}</a>
+              <form method="post" action="{{ url_for('delete_tournament', tournament_id=t.id) }}" class="inline ml-2"
+                    onsubmit="return confirm('{{ _('Delete this tournament?') }}')">
+                <button type="submit" class="text-red-500 hover:text-red-700 text-xs">✖</button>
+              </form>
+            </td>
+            <td class="p-2">
+              {% if t.creator %}
+                <a href="{{ url_for('user_profile', user_id=t.creator.id) }}" class="text-blue-600 hover:underline">@{{ t.creator.name }}</a>
+              {% else %} — {% endif %}
+            </td>
+            <td class="p-2">
+              {% if t.date_created %}{{ t.date_created.strftime('%Y-%m-%d') }}{% else %}—{% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- DISCUSSIONS -->
+  <div id="discussionsTab" class="tab-content hidden">
+    <input type="text" id="discussionFilter" onkeyup="filterTable('discussionTable', this.value)"
+           placeholder="🔍 {{ _('Filter by topic...') }}"
+           class="mb-3 w-full max-w-sm border border-gray-300 rounded-lg px-4 py-2 text-sm">
+    <div class="overflow-auto">
+      <table id="discussionTable" class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+        <thead class="bg-gray-100 text-left">
+          <tr><th class="p-2">ID</th><th class="p-2">{{ _('Topic') }}</th><th class="p-2">{{ _('Author') }}</th><th class="p-2">{{ _('Date') }}</th><th class="p-2">{{ _('Messages') }}</th></tr>
+        </thead>
+        <tbody>
+        {% for d in discussions %}
+          <tr class="border-t">
+            <td class="p-2">{{ d.id }}</td>
+            <td class="p-2">
+              <a href="{{ url_for('discussion_chat', discussion_id=d.id) }}" class="text-purple-600 hover:underline">{{ d.title }}</a>
+              <form method="post" action="{{ url_for('delete_discussion', discussion_id=d.id) }}" class="inline ml-2"
+                    onsubmit="return confirm('{{ _('Delete this discussion?') }}')">
+                <button type="submit" class="text-red-500 hover:text-red-700 text-xs">✖</button>
+              </form>
+            </td>
+            <td class="p-2">
+              {% if d.author %}
+                <a href="{{ url_for('user_profile', user_id=d.author.id) }}" class="text-blue-600 hover:underline">@{{ d.author.name }}</a>
+              {% else %} — {% endif %}
+            </td>
+            <td class="p-2">{{ d.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+            <td class="p-2">{{ d.messages|length }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- JS -->
+<script>
+function openTab(id, btn) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  document.querySelectorAll('.tab-button').forEach(el => el.classList.remove('bg-purple-600', 'text-white'));
+  btn.classList.add('bg-purple-600', 'text-white');
+}
+
+function filterTable(tableId, filterValue) {
+  const table = document.getElementById(tableId);
+  const rows = table.getElementsByTagName("tr");
+  const filter = filterValue.toLowerCase();
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
+    const text = row.textContent.toLowerCase();
+    row.style.display = text.includes(filter) ? "" : "none";
+  }
+}
+</script>
+{% endblock %}
